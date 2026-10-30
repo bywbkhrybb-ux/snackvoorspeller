@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Snackvoorspeller · Next Standard</title>
+<meta name="theme-color" content="#13192b">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Snack">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap">
+<style>
+html{-webkit-text-size-adjust:100%}
+body{margin:0;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+[hidden]{display:none!important}
+
+/* Next Standard huisstijl (standalone website): navy #13192b, lichtblauwe grond, groen #00f098 met verloop naar cyaan, Gilroy/Montserrat 900 koppen, /slash/-koppen, pill-knoppen, ronde kaarten */
+:root{
+  --bg:#eef8fc; --bg2:#ffffff; --surface:#ffffff; --soft:#f1f3f9; --ink:#13192b; --muted:#41475d; --line:#d4d9ec;
+  --green:#00f098; --cyan:#00f0ff; --on-green:#13192b; --wall:#d9eff9;
+  --navy:#13192b; --on-navy:#ffffff;
+  --good:#00a86b; --good-bg:#d6fbeb; --bad:#d4364a;
+  --display:Gilroy,"Montserrat",system-ui,sans-serif;
+  --body:"Montserrat",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"Montserrat",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0c1120; --bg2:#13192b; --surface:#13192b; --soft:#1b2338; --ink:#eef8fc; --muted:#a9b2cc; --line:#2a3350;
+  --wall:#1b2338; --navy:#1f2942; --on-navy:#ffffff; --good:#00f098; --good-bg:#0f3a2c; --bad:#ff6b7d; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0c1120; --bg2:#13192b; --surface:#13192b; --soft:#1b2338; --ink:#eef8fc; --muted:#a9b2cc; --line:#2a3350;
+  --wall:#1b2338; --navy:#1f2942; --on-navy:#ffffff; --good:#00f098; --good-bg:#0f3a2c; --bad:#ff6b7d; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);background-image:linear-gradient(90deg,var(--bg) 0%,var(--bg2) 50%,var(--bg) 100%);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.55}
+.wrap{max-width:780px;margin:0 auto;padding-block:24px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:32px}
+header.hero{background:var(--navy);color:var(--on-navy);border-radius:32px;padding:28px clamp(20px,5vw,40px) 32px;display:flex;flex-direction:column;gap:10px;position:relative;overflow:hidden}
+header.hero::after{content:"";position:absolute;right:-60px;top:-60px;width:220px;height:220px;border-radius:50%;background:linear-gradient(135deg,var(--green),var(--cyan));opacity:.18;pointer-events:none}
+.brandrow{display:flex;align-items:center;gap:10px;font-weight:700;font-size:14px}
+.logo{width:30px;height:auto;flex:none}
+.eyebrow{font-size:13px;font-weight:600;color:#c9d2ea;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.wk{background:var(--green);color:var(--on-green);padding:3px 12px;border-radius:100px;font-weight:700}
+h1{font-family:var(--display);font-weight:900;font-size:clamp(32px,7vw,48px);line-height:1.05;margin:4px 0 0;text-wrap:balance;color:#fff}
+h1 span{background:linear-gradient(90deg,var(--green),var(--cyan));-webkit-background-clip:text;background-clip:text;color:transparent}
+.lede{color:#c9d2ea;margin:0;max-width:58ch}
+h2{font-family:var(--display);font-weight:900;font-size:26px;margin:0;color:var(--ink)}
+h2 .sl{color:var(--good)}
+section{display:flex;flex-direction:column;gap:14px}
+.sechead{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
+.note{font-size:14px;color:var(--muted)}
+.panel{background:var(--surface);border-radius:24px;padding:22px;display:flex;flex-direction:column;gap:16px;box-shadow:0 10px 30px rgba(19,25,43,.06)}
+
+.wall{background:var(--wall);border-radius:20px;padding:12px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+@media (max-width:520px){.wall{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.door{appearance:none;border:2px solid transparent;background:var(--surface);color:var(--ink);border-radius:12px;padding:10px 6px 8px;font:600 13px/1.2 var(--body);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:5px;min-height:64px;justify-content:center;transition:transform .12s,border-color .12s}
+.door .nr{font-size:10px;font-weight:700;color:var(--muted)}
+.door:hover{transform:translateY(-2px);border-color:var(--green)}
+.door[aria-pressed="true"]{background:var(--green);color:var(--on-green)}
+.door[aria-pressed="true"] .nr{color:var(--on-green)}
+.door:disabled{cursor:default;opacity:.5;transform:none}
+
+.row{display:flex;gap:10px;flex-wrap:wrap}
+input[type=text]{flex:1 1 220px;min-width:0;font:500 16px var(--body);padding:12px 18px;border-radius:100px;border:1.5px solid var(--line);background:var(--soft);color:var(--ink)}
+input[type=text]:focus{outline:none;border-color:var(--green)}
+button.primary{font:700 15px var(--body);padding:12px 24px;border-radius:100px;border:0;background:var(--green);color:var(--on-green);cursor:pointer;transition:filter .15s}
+button.primary:hover{filter:brightness(.95)}
+button.primary:disabled{opacity:.45;cursor:default}
+button.ghost{font:700 13px var(--body);padding:6px 14px;border-radius:100px;border:1.5px solid var(--line);background:transparent;color:var(--ink);cursor:pointer}
+:focus-visible{outline:3px solid var(--cyan);outline-offset:2px}
+
+.mine{display:flex;align-items:center;gap:12px;flex-wrap:wrap;font-size:15px}
+.tag{font-size:12px;font-weight:700;padding:4px 12px;border-radius:100px;background:var(--soft);color:var(--muted);white-space:nowrap}
+.tag.good{background:var(--good-bg);color:var(--good)}
+.tag.bad{color:var(--bad)}
+.tag.oil{background:var(--green);color:var(--on-green)}
+
+.reveal{display:flex;flex-direction:column;gap:2px;padding:18px 22px;border-radius:20px;background:linear-gradient(120deg,var(--green),var(--cyan));color:var(--on-green)}
+.reveal .lbl{font-size:13px;font-weight:700}
+.reveal .snack{font-family:var(--display);font-weight:900;font-size:30px;line-height:1.1}
+
+ul.list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+ul.list li{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--line);min-width:0}
+ul.list li:last-child{border-bottom:0}
+.who{font-weight:700;min-width:0;overflow-wrap:anywhere}
+.what{color:var(--muted);flex:1;min-width:0;overflow-wrap:anywhere}
+.av{width:30px;height:30px;border-radius:50%;flex:none;object-fit:cover;background:var(--soft)}
+
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+th,td{text-align:left;padding:10px 6px;border-bottom:1px solid var(--line)}
+th{font-size:12px;font-weight:700;color:var(--muted)}
+td.n,th.n{text-align:right}
+tr.first td{font-weight:800}
+.medal{font-weight:900;color:var(--good)}
+.empty{color:var(--muted);font-size:15px;padding:6px 0}
+.admin{border:2px dashed var(--line);box-shadow:none;background:transparent}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--navy);color:var(--on-navy);padding:12px 20px;border-radius:100px;font-weight:600;font-size:14px;z-index:20;border:1px solid var(--green)}
+@media (prefers-reduced-motion:reduce){.door,button.primary{transition:none}}
+
+.joinbox{display:flex;flex-direction:column;gap:12px}
+.joinbox p{margin:0}
+.linkbtn{appearance:none;background:none;border:0;padding:0;font:600 14px var(--body);color:var(--good);cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.account{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:14px;color:var(--muted);padding-top:4px;border-top:1px solid var(--line)}
+.account b{color:var(--ink)}
+.codebox{font:700 15px ui-monospace,Menlo,Consolas,monospace;background:var(--soft);padding:10px 14px;border-radius:12px;word-break:break-all;user-select:all}
+.dot{width:30px;height:30px;border-radius:50%;flex:none;display:grid;place-items:center;font-weight:800;font-size:13px;background:var(--wall);color:var(--ink)}
+.dot.me{background:var(--green);color:var(--on-green)}
+footer{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
+.err{color:var(--bad);font-size:14px;margin:0}
+.crown{width:28px;height:21px;flex:none;color:#ffcf3f}
+.kingbar{display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.07);border:1px solid rgba(0,240,152,.35);border-radius:16px;padding:10px 16px;align-self:flex-start;max-width:100%}
+.kingbar>div{display:flex;flex-direction:column;min-width:0}
+.klbl{font-size:12px;font-weight:700;color:#c9d2ea}
+.kname{font-family:var(--display);font-weight:900;font-size:20px;color:#fff;overflow-wrap:anywhere}
+.reveal .kings{display:flex;align-items:center;gap:8px;margin-top:6px;font-weight:800;font-size:15px}
+.reveal .kings .crown{color:var(--on-green);width:22px;height:17px}
+.tag.king{background:#fff3c4;color:#7a5600}
+.tag.king .crown{width:14px;height:11px;color:#c99200;vertical-align:-1px;margin-right:4px}
+select{flex:1 1 220px;min-width:0;font:500 16px var(--body);padding:12px 44px 12px 18px;border-radius:100px;border:1.5px solid var(--line);background:var(--soft) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2300a86b' stroke-width='2' fill='none'/%3E%3C/svg%3E") no-repeat right 18px center;color:var(--ink);appearance:none;-webkit-appearance:none}
+select:focus{outline:none;border-color:var(--green)}
+.result{display:flex;flex-direction:column;gap:6px;padding:16px 20px;border-radius:20px;background:var(--soft)}
+.result b{font-family:var(--display);font-weight:900;font-size:20px}
+.bars{display:flex;flex-direction:column;gap:8px}
+.bar{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 10px;font-size:14px}
+.bar .track{grid-column:1/-1;height:8px;border-radius:100px;background:var(--soft);overflow:hidden}
+.bar .fill{height:100%;border-radius:100px;background:linear-gradient(90deg,var(--green),var(--cyan))}
+
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="hero">
+    <div class="brandrow"><svg class="logo" role="img" aria-label="Next Standard" viewBox="0 0 51 47.4" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="nsg" x1="1.055" y1="0.038" x2="-0.14" y2="1.049"><stop offset="0" stop-color="#00f098"/><stop offset="1" stop-color="#00f0ff"/></linearGradient></defs><path d="M31.2,47.392l5.485-30.707a2.939,2.939,0,0,0-2.936-2.934s-7.1.057-10.056.057-4.047,1.281-4.047,2.877c0,0-3.459,19.969-5.41,30.707H0L3.884,25.175l14.334-9.721a2.546,2.546,0,0,0,.015-3.429L8.285,0H39.942L51,15.8,45.415,47.39H31.2Z" fill="url(#nsg)"/></svg><span>Next Standard</span></div>
+    <div class="eyebrow"><span class="wk" id="wkLabel">WK --</span><span id="deadline">Laden…</span></div>
+    <h1>Snack&shy;<span>voorspeller</span></h1>
+    <div class="kingbar" id="kingBar" hidden><svg class="crown" viewBox="0 0 24 18" aria-hidden="true"><path d="M2 15h20l1-11-6 5-5-8-5 8-6-5z" fill="currentColor"/><rect x="2" y="16" width="20" height="2" rx="1" fill="currentColor"/></svg><div><span class="klbl" id="kingLbl">Snackkoning</span><span class="kname" id="kingName"></span></div></div>
+    <p class="lede">Elke week één snack bij de vrijdaglunch. Voorspel welke het wordt vóór vrijdag 12:00. Daarna sluit het voorspellen en zie je wat iedereen heeft gekozen. Wie goed zit, is de snackkoning van de week.</p>
+  </header>
+
+  <section id="joinSection" hidden>
+    <div class="sechead"><h2><span class="sl">/</span>Wie ben jij?<span class="sl">/</span></h2></div>
+    <div class="panel">
+      <form class="joinbox" id="pickForm">
+        <p>Kies je naam uit de lijst.</p>
+        <div class="row">
+          <select id="pickName" aria-label="Kies je naam"><option value="">Kies je naam…</option></select>
+          <button class="primary" type="submit" id="pickBtn">Verder</button>
+        </div>
+        <p class="note">Sta je er niet tussen? <button type="button" class="linkbtn" id="showAdd">Voeg jezelf toe</button></p>
+      </form>
+      <form class="joinbox" id="addForm" hidden>
+        <p>Vul je naam in zoals collega's je kennen. Daarna sta je in de lijst.</p>
+        <div class="row">
+          <input type="text" id="addName" placeholder="Voornaam (en achternaam)" maxlength="40" autocomplete="name">
+          <button class="primary" type="submit" id="addBtn">Toevoegen</button>
+        </div>
+        <p class="err" id="addErr" hidden></p>
+        <p class="note"><button type="button" class="linkbtn" id="showPick">Terug naar de lijst</button></p>
+      </form>
+    </div>
+  </section>
+
+  <section id="mySection" hidden>
+    <div class="sechead"><h2><span class="sl">/</span>Jouw voorspelling<span class="sl">/</span></h2><span class="note" id="myStatus"></span></div>
+    <div class="panel">
+      <div id="revealBox" hidden></div>
+      <div class="wall" id="wall" role="group" aria-label="Kies een snack"></div>
+      <form class="row" id="guessForm">
+        <input type="text" id="guessInput" placeholder="Of typ een andere snack" maxlength="60" autocomplete="off">
+        <button class="primary" type="submit" id="guessBtn">Voorspelling opslaan</button>
+      </form>
+      <div class="mine" id="mine"></div>
+      <div class="account">
+        <span>Je speelt als <b id="meName"></b></span>
+        <button type="button" class="ghost" id="logoutBtn">Niet jij? Wissel van naam</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="adminSection" hidden>
+    <div class="sechead"><h2><span class="sl">/</span>Snack onthullen<span class="sl">/</span></h2><button type="button" class="linkbtn" id="adminLogout">Beheer afsluiten</button></div>
+    <div class="panel admin">
+      <form class="row" id="revealForm">
+        <input type="text" id="revealInput" placeholder="Wat lag er vandaag op tafel?" maxlength="60" autocomplete="off">
+        <button class="primary" type="submit" id="revealBtn">Onthullen</button>
+      </form>
+      <p class="note" style="margin:0">Goede antwoorden worden automatisch herkend. Klopt een beoordeling niet, zet hem dan bij "Deze week" om.</p>
+      <div class="row"><button type="button" class="ghost" id="undoReveal" hidden>Onthulling intrekken</button></div>
+      <details id="playerAdmin">
+        <summary class="note" style="cursor:pointer;font-weight:700">Namenlijst beheren</summary>
+        <ul class="list" id="playerList"></ul>
+      </details>
+    </div>
+  </section>
+
+  <section>
+    <div class="sechead"><h2><span class="sl">/</span>Deze week<span class="sl">/</span></h2><span class="note" id="countNote"></span></div>
+    <div class="panel"><div class="bars" id="tally" hidden></div><ul class="list" id="weekList"><li class="empty">Laden…</li></ul></div>
+  </section>
+
+  <section>
+    <div class="sechead"><h2><span class="sl">/</span>Klassement<span class="sl">/</span></h2><span class="note" id="weeksNote"></span></div>
+    <div class="panel" style="overflow-x:auto"><div id="standings"><p class="empty">Het klassement verschijnt na de eerste onthulling.</p></div></div>
+  </section>
+
+  <section>
+    <h2><span class="sl">/</span>Archief<span class="sl">/</span></h2>
+    <div class="panel"><ul class="list" id="archive"><li class="empty">Nog geen eerdere weken.</li></ul></div>
+  </section>
+
+  <section id="adminLoginSection" hidden>
+    <div class="panel admin">
+      <form class="row" id="adminForm">
+        <input type="text" id="adminCode" placeholder="Beheerderscode" maxlength="64" autocomplete="off" spellcheck="false">
+        <button class="primary" type="submit">Beheer openen</button>
+      </form>
+      <p class="err" id="adminErr" hidden></p>
+    </div>
+  </section>
+
+  <footer><span>Snackvoorspeller · Next Standard</span><button type="button" class="linkbtn" id="adminOpen">Beheer</button></footer>
+</div>
+<div class="toast" id="toast" role="status" hidden></div>
+<script src="app.js"></script>
+</body>
+</html>

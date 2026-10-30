@@ -121,6 +121,7 @@ footer{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-s
 .kingbar{display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.07);border:1px solid rgba(0,240,152,.35);border-radius:16px;padding:10px 16px;align-self:flex-start;max-width:100%}
 .kingbar>div{display:flex;flex-direction:column;min-width:0}
 .klbl{font-size:12px;font-weight:700;color:#c9d2ea}
+.ksnack{font-size:13px;font-weight:600;color:#c9d2ea}
 .kname{font-family:var(--display);font-weight:900;font-size:20px;color:#fff;overflow-wrap:anywhere}
 .reveal .kings{display:flex;align-items:center;gap:8px;margin-top:6px;font-weight:800;font-size:15px}
 .reveal .kings .crown{color:var(--on-green);width:22px;height:17px}
@@ -143,7 +144,7 @@ select:focus{outline:none;border-color:var(--green)}
     <div class="brandrow"><svg class="logo" role="img" aria-label="Next Standard" viewBox="0 0 51 47.4" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="nsg" x1="1.055" y1="0.038" x2="-0.14" y2="1.049"><stop offset="0" stop-color="#00f098"/><stop offset="1" stop-color="#00f0ff"/></linearGradient></defs><path d="M31.2,47.392l5.485-30.707a2.939,2.939,0,0,0-2.936-2.934s-7.1.057-10.056.057-4.047,1.281-4.047,2.877c0,0-3.459,19.969-5.41,30.707H0L3.884,25.175l14.334-9.721a2.546,2.546,0,0,0,.015-3.429L8.285,0H39.942L51,15.8,45.415,47.39H31.2Z" fill="url(#nsg)"/></svg><span>Next Standard</span></div>
     <div class="eyebrow"><span class="wk" id="wkLabel">WK --</span><span id="deadline">Laden…</span></div>
     <h1>Snack&shy;<span>voorspeller</span></h1>
-    <div class="kingbar" id="kingBar" hidden><svg class="crown" viewBox="0 0 24 18" aria-hidden="true"><path d="M2 15h20l1-11-6 5-5-8-5 8-6-5z" fill="currentColor"/><rect x="2" y="16" width="20" height="2" rx="1" fill="currentColor"/></svg><div><span class="klbl" id="kingLbl">Snackkoning</span><span class="kname" id="kingName"></span></div></div>
+    <div class="kingbar" id="kingBar" hidden><svg class="crown" viewBox="0 0 24 18" aria-hidden="true"><path d="M2 15h20l1-11-6 5-5-8-5 8-6-5z" fill="currentColor"/><rect x="2" y="16" width="20" height="2" rx="1" fill="currentColor"/></svg><div><span class="klbl" id="kingLbl">Snackkoning</span><span class="kname" id="kingName"></span><span class="ksnack" id="kingSnack"></span></div></div>
     <p class="lede">Elke week één snack bij de vrijdaglunch. Voorspel welke het wordt vóór vrijdag 12:00. Daarna sluit het voorspellen en zie je wat iedereen heeft gekozen. Wie goed zit, is de snackkoning van de week.</p>
   </header>
 
@@ -209,7 +210,7 @@ select:focus{outline:none;border-color:var(--green)}
 
   <section>
     <div class="sechead"><h2><span class="sl">/</span>Deze week<span class="sl">/</span></h2><span class="note" id="countNote"></span></div>
-    <div class="panel"><div class="bars" id="tally" hidden></div><ul class="list" id="weekList"><li class="empty">Laden…</li></ul></div>
+    <div class="panel"><div id="weekReveal" hidden></div><div class="bars" id="tally" hidden></div><ul class="list" id="weekList"><li class="empty">Laden…</li></ul></div>
   </section>
 
   <section>

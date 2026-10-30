@@ -159,6 +159,7 @@ const CROWN = '<svg class="crown" viewBox="0 0 24 18" aria-hidden="true"><path d
       kb.hidden = false;
       $("kingLbl").textContent = (lastRev.correct.length > 1 ? "Snackkoningen" : "Snackkoning") + " van week " + weekNo(lastRev.week);
       $("kingName").textContent = k || "Niemand. De kroon blijft liggen.";
+      $("kingSnack").textContent = "De snack was: " + lastRev.snack;
     } else kb.hidden = true;
 
     // my guess
@@ -202,6 +203,14 @@ const CROWN = '<svg class="crown" viewBox="0 0 24 18" aria-hidden="true"><path d
     }
 
     // this week
+    const wr = $("weekReveal"); wr.replaceChildren(); wr.hidden = !rev;
+    if (rev) {
+      const d = el("div", "reveal"); d.append(el("span", "lbl", "De snack van week " + weekNo(wk)), el("span", "snack", rev.snack));
+      const kl = el("div", "kings"); kl.innerHTML = CROWN; const k = kingsText(rev.correct);
+      kl.append(k ? (rev.correct.length > 1 ? "Snackkoningen: " : "Snackkoning: ") + k : "Geen snackkoning deze week");
+      d.append(kl); wr.append(d);
+    }
+    $("revealBox").hidden = true;
     const wg = guessesOf(wk); const ul = $("weekList"); ul.replaceChildren();
     $("countNote").textContent = wg.length + (wg.length === 1 ? " voorspelling" : " voorspellingen") + (state.closed ? "" : " · zichtbaar vanaf vrijdag 12:00");
     // tally of what people chose, once the week is closed

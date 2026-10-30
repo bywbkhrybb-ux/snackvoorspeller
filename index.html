@@ -108,6 +108,15 @@ tr.first td{font-weight:800}
 .dot.me{background:var(--green);color:var(--on-green)}
 footer{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
 .err{color:var(--bad);font-size:14px;margin:0}
+.oracle{display:flex;flex-direction:column;gap:10px;align-items:flex-start}
+#oracleBtn{display:inline-flex;align-items:center;gap:8px;padding:9px 16px;font-size:14px;border-color:var(--green)}
+#oracleBtn svg{color:var(--good)}
+#oracleBtn:disabled{opacity:.45;cursor:default}
+.oracle-out{margin:0;padding:12px 16px;border-radius:16px;background:var(--wall);font-size:14px;max-width:60ch}
+.oracle-out b{font-weight:800}
+@keyframes shuffle{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+.door.spin{animation:shuffle .18s ease-in-out}
+@media (prefers-reduced-motion:reduce){.door.spin{animation:none}}
 .crown{width:28px;height:21px;flex:none;color:#ffcf3f}
 .kingbar{display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.07);border:1px solid rgba(0,240,152,.35);border-radius:16px;padding:10px 16px;align-self:flex-start;max-width:100%}
 .kingbar>div{display:flex;flex-direction:column;min-width:0}
@@ -170,6 +179,10 @@ select:focus{outline:none;border-color:var(--green)}
         <input type="text" id="guessInput" placeholder="Of typ een andere snack" maxlength="60" autocomplete="off">
         <button class="primary" type="submit" id="guessBtn">Voorspelling opslaan</button>
       </form>
+      <div class="oracle">
+        <button type="button" class="ghost" id="oracleBtn"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M12 2l2.2 6.3L20.5 10l-6.3 2.2L12 18.5l-2.2-6.3L3.5 10l6.3-1.7zM19 15l1 2.6 2.5 1-2.5 1L19 22l-1-2.4-2.5-1 2.5-1z" fill="currentColor"/></svg><span>Laat het snackorakel kiezen</span></button>
+        <p class="oracle-out" id="oracleOut" hidden></p>
+      </div>
       <div class="mine" id="mine"></div>
       <div class="account">
         <span>Je speelt als <b id="meName"></b></span>

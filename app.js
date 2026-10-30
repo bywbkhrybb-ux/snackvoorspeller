@@ -71,6 +71,52 @@ const CROWN = '<svg class="crown" viewBox="0 0 24 18" aria-hidden="true"><path d
   }
   $("guessInput").addEventListener("input", syncDoors);
 
+
+  // --- snackorakel: weighted pick on season, how long ago a snack was served, and past form ---
+  const WARM = ["Kroket", "Frikandel", "Kaassoufflé", "Bitterballen", "Eierbal", "Bamischijf", "Berenklauw", "Kipcorn"];
+  const pickOne = (arr) => arr[Math.floor(Math.random() * arr.length)];
+  function oracle() {
+    const month = Number(new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Amsterdam", month: "numeric" }).format(new Date()));
+    const cold = month >= 10 || month <= 3;
+    const past = state ? state.reveals.slice().sort((a, b) => (a.week < b.week ? 1 : -1)) : [];
+    const ago = (s) => { const i = past.findIndex((r) => norm(r.snack) === norm(s)); return i === -1 ? null : i + 1; };
+    const served = (s) => past.filter((r) => norm(r.snack) === norm(s)).length;
+    const scored = SNACKS.map((s) => {
+      let w = 1, why = [];
+      if (cold && WARM.includes(s)) { w *= 1.8; why.push(pickOne(["het is " + ["", "januari", "februari", "maart", "", "", "", "", "", "oktober", "november", "december"][month - 1] + " en de frituur draait overuren", "koud weer vraagt om iets uit het vet", "in dit seizoen wint warm het altijd van koud"])); }
+      if (!cold && !WARM.includes(s)) { w *= 1.6; why.push(pickOne(["het is te warm voor zwaar frituurwerk", "zomerweer vraagt om iets lichts"])); }
+      const a = ago(s);
+      if (a === 1) { w *= 0.25; why = ["hij lag vorige week al op tafel, dus de kans is klein. Maar het orakel houdt van risico"]; }
+      else if (a === null && past.length >= 3) { w *= 1.5; why.push("hij is nog nooit geweest en zit er dus aan te komen"); }
+      else if (a !== null && a >= 4) { w *= 1.4; why.push("hij is al " + a + " weken niet geweest"); }
+      const n = served(s); if (n >= 2) { w *= 1.2; why.push("hij is al " + n + " keer de snack geweest, de kantine weet wat werkt"); }
+      if (!why.length) why.push(pickOne(["het orakel voelde het in de vingers", "een gevoel dat niet uit te leggen valt", "de sterren staan in een bitterbalvorm"]));
+      return { s, w, why };
+    });
+    const total = scored.reduce((t, x) => t + x.w, 0); let r = Math.random() * total;
+    return scored.find((x) => (r -= x.w) <= 0) || scored[0];
+  }
+  $("oracleBtn").addEventListener("click", () => {
+    const btn = $("oracleBtn"); btn.disabled = true;
+    const doors = [...document.querySelectorAll(".door")]; let i = 0;
+    const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const done = () => {
+      const pick = oracle();
+      $("guessInput").value = pick.s; syncDoors();
+      const out = $("oracleOut"); out.replaceChildren();
+      const b = document.createElement("b"); b.textContent = pick.s;
+      out.append("Het orakel heeft gesproken: ", b, ". Waarom? " + pick.why[0].charAt(0).toUpperCase() + pick.why[0].slice(1) + (pick.why[1] ? ", en " + pick.why[1] : "") + ". Klik op opslaan als je het orakel vertrouwt.");
+      out.hidden = false; btn.disabled = !!(state && state.closed);
+    };
+    if (reduced) return done();
+    const t = setInterval(() => {
+      doors.forEach((d) => d.setAttribute("aria-pressed", "false"));
+      const d = doors[Math.floor(Math.random() * doors.length)]; d.setAttribute("aria-pressed", "true");
+      d.classList.remove("spin"); void d.offsetWidth; d.classList.add("spin");
+      if (++i > 12) { clearInterval(t); done(); }
+    }, 90);
+  });
+
   // --- helpers on state ---
   const weekNo = (wk) => parseInt(String(wk).split("-W")[1], 10);
   const players = () => { const m = {}; (state ? state.players : []).forEach((p) => (m[p.id] = p.name)); return m; };
@@ -121,7 +167,7 @@ const CROWN = '<svg class="crown" viewBox="0 0 24 18" aria-hidden="true"><path d
       const mine = guessesOf(wk).find((g) => g.player_id === me.id);
       const locked = state.closed;
       document.querySelectorAll(".door").forEach((d) => (d.disabled = locked));
-      $("guessInput").disabled = locked; $("guessBtn").disabled = locked;
+      $("guessInput").disabled = locked; $("guessBtn").disabled = locked; $("oracleBtn").disabled = locked; if (locked) $("oracleOut").hidden = true;
       $("guessBtn").textContent = mine ? "Voorspelling wijzigen" : "Voorspelling opslaan";
       $("myStatus").textContent = rev ? "Onthuld" : locked ? "Gesloten" : "Open";
       const m = $("mine"); m.replaceChildren();

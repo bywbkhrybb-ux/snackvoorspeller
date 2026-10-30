@@ -203,7 +203,13 @@ const CROWN = '<svg class="crown" viewBox="0 0 24 18" aria-hidden="true"><path d
     }
 
     // this week
-    const wr = $("weekReveal"); wr.replaceChildren(); wr.hidden = !rev;
+    const wr = $("weekReveal"); wr.replaceChildren(); wr.hidden = !rev && !state.closed;
+    if (!rev && state.closed) {
+      const d = el("div", "result");
+      d.append(el("span", "note", "De snack van week " + weekNo(wk)), el("b", "", "Nog niet onthuld"),
+        el("span", "note", adminCode ? "Vul hierboven bij Snack onthullen in wat er op tafel lag." : "Zodra de beheerder de snack invult, zie je hier wat het was en wie snackkoning is."));
+      wr.append(d);
+    }
     if (rev) {
       const d = el("div", "reveal"); d.append(el("span", "lbl", "De snack van week " + weekNo(wk)), el("span", "snack", rev.snack));
       const kl = el("div", "kings"); kl.innerHTML = CROWN; const k = kingsText(rev.correct);

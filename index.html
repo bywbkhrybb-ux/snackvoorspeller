@@ -116,8 +116,8 @@ footer{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-s
 .oracle-out b{font-weight:800}
 @keyframes shuffle{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
 .door.spin{animation:shuffle .18s ease-in-out}
-@keyframes flip{0%{transform:rotateX(0)}50%{transform:rotateX(90deg)}100%{transform:rotateX(0)}}
-.door.flip{animation:flip .22s ease-in-out}
+@keyframes flip{0%{opacity:1}40%{opacity:.35;transform:scale(.97)}100%{opacity:1;transform:none}}
+.door.flip{animation:flip .35s ease-out}
 .door .lbl{min-height:2.4em;display:flex;align-items:center;text-align:center}
 #deadline.urgent{background:#ff6b7d;color:#fff;padding:3px 10px;border-radius:100px;font-variant-numeric:tabular-nums}
 #deadline.soon{font-variant-numeric:tabular-nums}
@@ -241,6 +241,6 @@ select:focus{outline:none;border-color:var(--green)}
   <footer><span>Snackvoorspeller · Next Standard</span><button type="button" class="linkbtn" id="adminOpen">Beheer</button></footer>
 </div>
 <div class="toast" id="toast" role="status" hidden></div>
-<script src="app.js?v=035b084"></script>
+<script src="app.js?v=2"></script>
 </body>
 </html>

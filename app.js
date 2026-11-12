@@ -90,7 +90,8 @@ const CROWN = '<svg class="crown" viewBox="0 0 24 18" aria-hidden="true"><path d
     }
     wallSnacks = list.slice();
     [...wall.children].forEach((b, i) => {
-      b.querySelector(".lbl").textContent = list[i];
+      const l = b.querySelector(".lbl"); if (l.textContent === list[i]) return;
+      l.textContent = list[i];
       if (animate) { b.classList.remove("flip"); void b.offsetWidth; b.classList.add("flip"); }
     });
     lockDoors(); syncDoors();
@@ -148,7 +149,9 @@ const CROWN = '<svg class="crown" viewBox="0 0 24 18" aria-hidden="true"><path d
     const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
     const pick = oracle();
     const done = () => {
-      drawWall(randomWall(pick.s), !reduced);
+      const next = reduced ? randomWall(pick.s) : wallSnacks.slice();
+      if (!next.some((x) => norm(x) === norm(pick.s))) next[Math.floor(Math.random() * next.length)] = pick.s;
+      drawWall(next, !reduced);
       $("guessInput").value = pick.s; syncDoors();
       const out = $("oracleOut"); out.replaceChildren();
       const b = document.createElement("b"); b.textContent = pick.s;
@@ -156,14 +159,14 @@ const CROWN = '<svg class="crown" viewBox="0 0 24 18" aria-hidden="true"><path d
       out.hidden = false; btn.disabled = !!(state && state.closed);
     };
     if (reduced) return done();
-    // shuffle: the wall fills with new snacks a few times before the oracle settles
+    // shuffle: a few snacks on the wall change at a time before the oracle settles
     let i = 0;
     const t = setInterval(() => {
-      drawWall(randomWall(), true);
-      const doors = [...$("wall").children];
-      doors[Math.floor(Math.random() * doors.length)].setAttribute("aria-pressed", "true");
-      if (++i >= 7) { clearInterval(t); done(); }
-    }, 160);
+      const next = wallSnacks.slice(), fresh = shuffle(pool().filter((x) => !next.some((y) => norm(y) === norm(x))));
+      shuffle([...next.keys()]).slice(0, 3).forEach((k, j) => { if (fresh[j]) next[k] = fresh[j]; });
+      drawWall(next, true);
+      if (++i >= 4) { clearInterval(t); done(); }
+    }, 260);
   });
 
   // --- helpers on state ---

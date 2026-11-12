@@ -242,6 +242,17 @@ const CROWN = '<svg class="crown" viewBox="0 0 24 18" aria-hidden="true"><path d
       const m = $("mine"); m.replaceChildren();
       if (mine) {
         m.append(el("span", "", "Jouw voorspelling:"), el("span", "tag oil", mine.snack));
+        if (!locked) {
+          const del = el("button", "ghost", "Verwijderen"); del.type = "button"; del.id = "delGuess";
+          del.onclick = async () => {
+            if (del.dataset.sure !== "1") { del.dataset.sure = "1"; del.textContent = "Zeker weten?"; del.style.color = "var(--bad)"; return; }
+            del.disabled = true;
+            try { await rpc("delete_guess", { p_player: me.id }); toast("Voorspelling verwijderd"); }
+            catch (err) { toast(msg(err)); }
+            await refresh();
+          };
+          m.append(del);
+        }
         if (rev) { const ok = rev.correct.includes(me.id); m.append(ok ? crownTag("Jij bent snackkoning!") : el("span", "tag bad", "Helaas")); }
       } else m.append(el("span", "note", locked ? "Je hebt deze week niet voorspeld." : "Nog niets ingevuld deze week."));
       if (locked && !rev) m.append(el("span", "note", "Voorspellen is gesloten. Bekijk hieronder wat iedereen koos. Na de lunch wordt de snack onthuld."));

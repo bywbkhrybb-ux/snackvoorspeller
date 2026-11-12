@@ -144,29 +144,54 @@ const CROWN = '<svg class="crown" viewBox="0 0 24 18" aria-hidden="true"><path d
     const total = scored.reduce((t, x) => t + x.w, 0); let r = Math.random() * total;
     return scored.find((x) => (r -= x.w) <= 0) || scored[0];
   }
+  // --- draairad: spins the snacks on the wall and lands on the oracle's pick ---
+  const NS = "http://www.w3.org/2000/svg";
+  const svgEl = (tag, attrs) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); return e; };
+  const SEG = [["var(--green)", "var(--on-green)"], ["var(--navy)", "var(--on-navy)"], ["var(--cyan)", "var(--on-green)"], ["var(--surface)", "var(--ink)"]];
+  let wheelRot = 0;
+  function buildWheel(list) {
+    const n = list.length, a = 360 / n, R = 100;
+    const svg = svgEl("svg", { viewBox: "-112 -118 224 230" });
+    const rot = svgEl("g", { class: "rot" });
+    rot.style.transform = "rotate(" + wheelRot + "deg)";
+    list.forEach((t, i) => {
+      const a0 = (i * a - 90) * Math.PI / 180, a1 = ((i + 1) * a - 90) * Math.PI / 180;
+      const col = SEG[i % SEG.length];
+      const g = svgEl("g", { class: "seg" });
+      g.append(svgEl("path", { d: "M0 0L" + (R * Math.cos(a0)).toFixed(2) + " " + (R * Math.sin(a0)).toFixed(2) + "A" + R + " " + R + " 0 0 1 " + (R * Math.cos(a1)).toFixed(2) + " " + (R * Math.sin(a1)).toFixed(2) + "Z", fill: col[0], stroke: "var(--line)", "stroke-width": "1" }));
+      const tx = svgEl("text", { transform: "rotate(" + ((i + 0.5) * a - 90) + ") translate(60 0)", "text-anchor": "middle", fill: col[1] });
+      tx.textContent = t.length > 15 ? t.slice(0, 14) + "…" : t;
+      g.append(tx); rot.append(g);
+    });
+    svg.append(svgEl("circle", { r: R + 4, fill: "none", stroke: "var(--navy)", "stroke-width": "6" }), rot,
+      svgEl("circle", { class: "hub", r: 14 }), svgEl("path", { class: "pin", d: "M-11 -116L11 -116L0 -92Z" }));
+    const w = $("wheel"); w.replaceChildren(svg); w.hidden = false;
+    return rot;
+  }
   $("oracleBtn").addEventListener("click", () => {
-    const btn = $("oracleBtn"); btn.disabled = true;
+    const btn = $("oracleBtn"); btn.disabled = true; $("oracleOut").hidden = true;
     const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
     const pick = oracle();
+    const list = randomWall(pick.s);              // the wall and the wheel show the same new snacks
+    drawWall(list, !reduced);
+    $("guessInput").value = ""; syncDoors();
+    const rot = buildWheel(list);
+    const n = list.length, a = 360 / n, k = list.findIndex((x) => norm(x) === norm(pick.s));
+    const jitter = (Math.random() - 0.5) * a * 0.6;
+    const target = -(k + 0.5) * a + jitter;
+    const base = wheelRot - (((wheelRot % 360) + 360) % 360);
+    wheelRot = base + (reduced ? 0 : 360 * 5) + ((target % 360) + 360) % 360;
     const done = () => {
-      const next = reduced ? randomWall(pick.s) : wallSnacks.slice();
-      if (!next.some((x) => norm(x) === norm(pick.s))) next[Math.floor(Math.random() * next.length)] = pick.s;
-      drawWall(next, !reduced);
       $("guessInput").value = pick.s; syncDoors();
       const out = $("oracleOut"); out.replaceChildren();
       const b = document.createElement("b"); b.textContent = pick.s;
       out.append("Het orakel heeft gesproken: ", b, ". Waarom? " + cap(pick.why[0]) + (pick.why[1] ? ", en " + pick.why[1] : "") + ". Klik op opslaan als je het orakel vertrouwt.");
       out.hidden = false; btn.disabled = !!(state && state.closed);
     };
+    requestAnimationFrame(() => requestAnimationFrame(() => { rot.style.transform = "rotate(" + wheelRot + "deg)"; }));
     if (reduced) return done();
-    // shuffle: a few snacks on the wall change at a time before the oracle settles
-    let i = 0;
-    const t = setInterval(() => {
-      const next = wallSnacks.slice(), fresh = shuffle(pool().filter((x) => !next.some((y) => norm(y) === norm(x))));
-      shuffle([...next.keys()]).slice(0, 3).forEach((k, j) => { if (fresh[j]) next[k] = fresh[j]; });
-      drawWall(next, true);
-      if (++i >= 4) { clearInterval(t); done(); }
-    }, 260);
+    $("wheel").scrollIntoView({ behavior: "smooth", block: "center" });
+    setTimeout(done, 4300);
   });
 
   // --- helpers on state ---
@@ -236,7 +261,7 @@ const CROWN = '<svg class="crown" viewBox="0 0 24 18" aria-hidden="true"><path d
       const mine = guessesOf(wk).find((g) => g.player_id === me.id);
       const locked = state.closed;
       lockDoors();
-      $("guessInput").disabled = locked; $("guessBtn").disabled = locked; $("oracleBtn").disabled = locked; if (locked) $("oracleOut").hidden = true;
+      $("guessInput").disabled = locked; $("guessBtn").disabled = locked; $("oracleBtn").disabled = locked; if (locked) { $("oracleOut").hidden = true; $("wheel").hidden = true; }
       $("guessBtn").textContent = mine ? "Voorspelling wijzigen" : "Voorspelling opslaan";
       $("myStatus").textContent = rev ? "Onthuld" : locked ? "Gesloten" : "Open";
       const m = $("mine"); m.replaceChildren();

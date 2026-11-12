@@ -112,6 +112,13 @@ footer{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-s
 #oracleBtn{display:inline-flex;align-items:center;gap:8px;padding:9px 16px;font-size:14px;border-color:var(--green)}
 #oracleBtn svg{color:var(--good)}
 #oracleBtn:disabled{opacity:.45;cursor:default}
+.wheel{position:relative;width:min(100%,320px);align-self:center;margin:4px auto 0}
+.wheel svg{display:block;width:100%;height:auto}
+.wheel .rot{transform-origin:0 0;transition:transform 4.2s cubic-bezier(.15,.75,.12,1)}
+.wheel .seg text{font:700 8px/1 var(--body);dominant-baseline:middle}
+.wheel .hub{fill:var(--navy);stroke:var(--green);stroke-width:3}
+.wheel .pin{fill:var(--bad);stroke:var(--surface);stroke-width:2}
+@media (prefers-reduced-motion:reduce){.wheel .rot{transition:none}}
 .oracle-out{margin:0;padding:12px 16px;border-radius:16px;background:var(--wall);font-size:14px;max-width:60ch}
 .oracle-out b{font-weight:800}
 @keyframes shuffle{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
@@ -187,7 +194,8 @@ select:focus{outline:none;border-color:var(--green)}
       </form>
       <div class="oracle">
         <button type="button" class="ghost" id="oracleBtn"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M12 2l2.2 6.3L20.5 10l-6.3 2.2L12 18.5l-2.2-6.3L3.5 10l6.3-1.7zM19 15l1 2.6 2.5 1-2.5 1L19 22l-1-2.4-2.5-1 2.5-1z" fill="currentColor"/></svg><span>Laat het snackorakel kiezen</span></button>
-        <p class="oracle-out" id="oracleOut" hidden></p>
+        <div class="wheel" id="wheel" hidden aria-hidden="true"></div>
+        <p class="oracle-out" id="oracleOut" hidden aria-live="polite"></p>
       </div>
       <div class="mine" id="mine"></div>
       <div class="account">
@@ -241,6 +249,6 @@ select:focus{outline:none;border-color:var(--green)}
   <footer><span>Snackvoorspeller · Next Standard</span><button type="button" class="linkbtn" id="adminOpen">Beheer</button></footer>
 </div>
 <div class="toast" id="toast" role="status" hidden></div>
-<script src="app.js?v=3"></script>
+<script src="app.js?v=4"></script>
 </body>
 </html>

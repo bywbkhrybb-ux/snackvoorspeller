@@ -116,7 +116,12 @@ footer{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-s
 .oracle-out b{font-weight:800}
 @keyframes shuffle{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
 .door.spin{animation:shuffle .18s ease-in-out}
-@media (prefers-reduced-motion:reduce){.door.spin{animation:none}}
+@keyframes flip{0%{transform:rotateX(0)}50%{transform:rotateX(90deg)}100%{transform:rotateX(0)}}
+.door.flip{animation:flip .22s ease-in-out}
+.door .lbl{min-height:2.4em;display:flex;align-items:center;text-align:center}
+#deadline.urgent{background:#ff6b7d;color:#fff;padding:3px 10px;border-radius:100px;font-variant-numeric:tabular-nums}
+#deadline.soon{font-variant-numeric:tabular-nums}
+@media (prefers-reduced-motion:reduce){.door.spin,.door.flip{animation:none}}
 .crown{width:28px;height:21px;flex:none;color:#ffcf3f}
 .kingbar{display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.07);border:1px solid rgba(0,240,152,.35);border-radius:16px;padding:10px 16px;align-self:flex-start;max-width:100%}
 .kingbar>div{display:flex;flex-direction:column;min-width:0}

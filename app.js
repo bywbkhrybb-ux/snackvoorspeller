@@ -6,8 +6,12 @@
   const SB_URL = "https://vhhooatojbjefcdldwpg.supabase.co";
   const SB_KEY = "sb_publishable_6sJcAMs_68N-I2ZuKlajHw_968JENzK";
 
-  const SNACKS = ["Kroket", "Frikandel", "Kaassoufflé", "Bitterballen", "Saucijzenbroodje", "Loempia",
-    "Kipcorn", "Berenklauw", "Bamischijf", "Eierbal", "Worstenbroodje", "Tosti"];
+  // Basisvoorraad; aangevuld met alles wat ooit geserveerd of voorspeld is.
+  const BASE = ["Kroket", "Frikandel", "Kaassoufflé", "Bitterballen", "Saucijzenbroodje", "Loempia",
+    "Kipcorn", "Eierbal", "Tosti", "Hamburger", "Bao bun", "Turkse pizza", "Pita kip", "Nasi", "Bami",
+    "Broodje gehaktbal", "Broodje beenham", "Broodje kroket", "Pizza", "Shoarma", "Wrap", "Patat",
+    "Sushi", "Poké bowl", "Soep", "Pannenkoeken", "Döner", "Hotdog", "Broodje kipsaté", "Quiche"];
+  const WALL_SIZE = 12;
   const ERR = {
     invalid_name: "Vul een naam in van maximaal 40 tekens.",
     unknown_player: "Je naam staat niet meer in de lijst. Kies hem opnieuw of voeg jezelf toe.",
@@ -59,38 +63,81 @@ const CROWN = '<svg class="crown" viewBox="0 0 24 18" aria-hidden="true"><path d
   }
 
   // --- snack wall ---
-  SNACKS.forEach((s, i) => {
-    const b = el("button", "door"); b.type = "button"; b.id = "door" + i; b.setAttribute("aria-pressed", "false");
-    b.append(el("span", "nr", String(i + 1).padStart(2, "0")), el("span", "", s));
-    b.addEventListener("click", () => { $("guessInput").value = s; syncDoors(); });
-    $("wall").appendChild(b);
-  });
+  const cap = (t) => { t = String(t).trim(); return t.charAt(0).toUpperCase() + t.slice(1); };
+  const shuffle = (a) => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+  // every snack we know of: served ones first, then voorspeld, then de basisvoorraad
+  function pool() {
+    const seen = new Map();
+    const add = (t) => { if (!t) return; const k = norm(t); if (k && !seen.has(k)) seen.set(k, cap(t)); };
+    if (state) {
+      state.reveals.slice().sort((a, b) => (a.week < b.week ? 1 : -1)).forEach((r) => add(r.snack));
+      state.guesses.forEach((g) => add(g.snack));
+    }
+    BASE.forEach(add);
+    return [...seen.values()];
+  }
+  let wallSnacks = [];
+  function drawWall(list, animate) {
+    const wall = $("wall");
+    if (wall.children.length !== list.length) {
+      wall.replaceChildren();
+      list.forEach((_, i) => {
+        const b = el("button", "door"); b.type = "button"; b.setAttribute("aria-pressed", "false");
+        b.append(el("span", "nr", String(i + 1).padStart(2, "0")), el("span", "lbl", ""));
+        b.addEventListener("click", () => { $("guessInput").value = wallSnacks[i]; syncDoors(); });
+        wall.appendChild(b);
+      });
+    }
+    wallSnacks = list.slice();
+    [...wall.children].forEach((b, i) => {
+      b.querySelector(".lbl").textContent = list[i];
+      if (animate) { b.classList.remove("flip"); void b.offsetWidth; b.classList.add("flip"); }
+    });
+    lockDoors(); syncDoors();
+  }
+  // initial wall: what was served lately plus a random handful, so it isn't only frituur
+  function initialWall() {
+    const all = pool();
+    const recent = state ? state.reveals.slice().sort((a, b) => (a.week < b.week ? 1 : -1)).map((r) => cap(r.snack)) : [];
+    const pick = [];
+    recent.slice(0, 3).forEach((t) => { if (!pick.some((x) => norm(x) === norm(t))) pick.push(t); });
+    shuffle(all).forEach((t) => { if (pick.length < WALL_SIZE && !pick.some((x) => norm(x) === norm(t))) pick.push(t); });
+    return shuffle(pick);
+  }
+  function randomWall(mustHave) {
+    const rest = shuffle(pool().filter((t) => !mustHave || norm(t) !== norm(mustHave))).slice(0, WALL_SIZE - (mustHave ? 1 : 0));
+    if (mustHave) rest.splice(Math.floor(Math.random() * (rest.length + 1)), 0, mustHave);
+    return rest;
+  }
+  function lockDoors() { const locked = !!(state && state.closed); [...$("wall").children].forEach((d) => (d.disabled = locked)); }
   function syncDoors() {
     const v = norm($("guessInput").value);
-    SNACKS.forEach((s, i) => $("door" + i).setAttribute("aria-pressed", String(!!v && norm(s) === v)));
+    [...$("wall").children].forEach((d, i) => d.setAttribute("aria-pressed", String(!!v && norm(wallSnacks[i]) === v)));
   }
   $("guessInput").addEventListener("input", syncDoors);
+  drawWall(randomWall(), false);
 
-
-  // --- snackorakel: weighted pick on season, how long ago a snack was served, and past form ---
-  const WARM = ["Kroket", "Frikandel", "Kaassoufflé", "Bitterballen", "Eierbal", "Bamischijf", "Berenklauw", "Kipcorn"];
+  // --- snackorakel: weighted pick over the whole pool on season, how long ago a snack was served, and popularity ---
+  const WARM = ["Kroket", "Frikandel", "Kaassoufflé", "Bitterballen", "Eierbal", "Kipcorn", "Soep", "Patat",
+    "Broodje kroket", "Shoarma", "Döner", "Nasi", "Bami", "Hamburger", "Pannenkoeken", "Broodje kipsaté"];
+  const isWarm = (s) => WARM.some((w) => norm(w) === norm(s));
   const pickOne = (arr) => arr[Math.floor(Math.random() * arr.length)];
+  const MONTHS = ["januari", "februari", "maart", "april", "mei", "juni", "juli", "augustus", "september", "oktober", "november", "december"];
   function oracle() {
     const month = Number(new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Amsterdam", month: "numeric" }).format(new Date()));
     const cold = month >= 10 || month <= 3;
     const past = state ? state.reveals.slice().sort((a, b) => (a.week < b.week ? 1 : -1)) : [];
     const ago = (s) => { const i = past.findIndex((r) => norm(r.snack) === norm(s)); return i === -1 ? null : i + 1; };
-    const served = (s) => past.filter((r) => norm(r.snack) === norm(s)).length;
-    const scored = SNACKS.map((s) => {
+    const guessedBy = (s) => (state ? state.guesses.filter((g) => g.snack && norm(g.snack) === norm(s)).length : 0);
+    const scored = pool().map((s) => {
       let w = 1, why = [];
-      if (cold && WARM.includes(s)) { w *= 1.8; why.push(pickOne(["het is " + ["", "januari", "februari", "maart", "", "", "", "", "", "oktober", "november", "december"][month - 1] + " en de frituur draait overuren", "koud weer vraagt om iets uit het vet", "in dit seizoen wint warm het altijd van koud"])); }
-      if (!cold && !WARM.includes(s)) { w *= 1.6; why.push(pickOne(["het is te warm voor zwaar frituurwerk", "zomerweer vraagt om iets lichts"])); }
+      if (cold && isWarm(s)) { w *= 1.6; why.push(pickOne(["het is " + MONTHS[month - 1] + " en dan wil je iets warms", "koud weer vraagt om iets warms", "in dit seizoen wint warm het altijd van koud"])); }
+      if (!cold && !isWarm(s)) { w *= 1.5; why.push(pickOne(["het is te warm voor zwaar frituurwerk", "zomerweer vraagt om iets lichts"])); }
       const a = ago(s);
       if (a === 1) { w *= 0.25; why = ["hij lag vorige week al op tafel, dus de kans is klein. Maar het orakel houdt van risico"]; }
-      else if (a === null && past.length >= 3) { w *= 1.5; why.push("hij is nog nooit geweest en zit er dus aan te komen"); }
       else if (a !== null && a >= 4) { w *= 1.4; why.push("hij is al " + a + " weken niet geweest"); }
-      const n = served(s); if (n >= 2) { w *= 1.2; why.push("hij is al " + n + " keer de snack geweest, de kantine weet wat werkt"); }
-      if (!why.length) why.push(pickOne(["het orakel voelde het in de vingers", "een gevoel dat niet uit te leggen valt", "de sterren staan in een bitterbalvorm"]));
+      const n = guessedBy(s); if (n >= 2) { w *= 1.2; why.push(n + " collega's dachten al eens aan deze, dat zegt iets"); }
+      if (!why.length) why.push(pickOne(["het orakel voelde het in de vingers", "een gevoel dat niet uit te leggen valt", "de sterren staan in een bitterbalvorm", "de kantine fluisterde het"]));
       return { s, w, why };
     });
     const total = scored.reduce((t, x) => t + x.w, 0); let r = Math.random() * total;
@@ -98,23 +145,25 @@ const CROWN = '<svg class="crown" viewBox="0 0 24 18" aria-hidden="true"><path d
   }
   $("oracleBtn").addEventListener("click", () => {
     const btn = $("oracleBtn"); btn.disabled = true;
-    const doors = [...document.querySelectorAll(".door")]; let i = 0;
     const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const pick = oracle();
     const done = () => {
-      const pick = oracle();
+      drawWall(randomWall(pick.s), !reduced);
       $("guessInput").value = pick.s; syncDoors();
       const out = $("oracleOut"); out.replaceChildren();
       const b = document.createElement("b"); b.textContent = pick.s;
-      out.append("Het orakel heeft gesproken: ", b, ". Waarom? " + pick.why[0].charAt(0).toUpperCase() + pick.why[0].slice(1) + (pick.why[1] ? ", en " + pick.why[1] : "") + ". Klik op opslaan als je het orakel vertrouwt.");
+      out.append("Het orakel heeft gesproken: ", b, ". Waarom? " + cap(pick.why[0]) + (pick.why[1] ? ", en " + pick.why[1] : "") + ". Klik op opslaan als je het orakel vertrouwt.");
       out.hidden = false; btn.disabled = !!(state && state.closed);
     };
     if (reduced) return done();
+    // shuffle: the wall fills with new snacks a few times before the oracle settles
+    let i = 0;
     const t = setInterval(() => {
-      doors.forEach((d) => d.setAttribute("aria-pressed", "false"));
-      const d = doors[Math.floor(Math.random() * doors.length)]; d.setAttribute("aria-pressed", "true");
-      d.classList.remove("spin"); void d.offsetWidth; d.classList.add("spin");
-      if (++i > 12) { clearInterval(t); done(); }
-    }, 90);
+      drawWall(randomWall(), true);
+      const doors = [...$("wall").children];
+      doors[Math.floor(Math.random() * doors.length)].setAttribute("aria-pressed", "true");
+      if (++i >= 7) { clearInterval(t); done(); }
+    }, 160);
   });
 
   // --- helpers on state ---
@@ -132,12 +181,27 @@ const CROWN = '<svg class="crown" viewBox="0 0 24 18" aria-hidden="true"><path d
   }
   function crownTag(text) { const t = el("span", "tag king"); t.innerHTML = CROWN; t.append(text); return t; }
 
+  // minutes until Friday 12:00 Amsterdam time (wall clock), or null if not in the open window
+  function msToDeadline() {
+    const parts = {}; new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Amsterdam", weekday: "short", hour: "numeric", minute: "numeric", second: "numeric", hourCycle: "h23" })
+      .formatToParts(new Date()).forEach((p) => (parts[p.type] = p.value));
+    const day = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].indexOf(parts.weekday);
+    const now = ((day * 24 + +parts.hour) * 60 + +parts.minute) * 60 + +parts.second;
+    const end = (4 * 24 + 12) * 3600;
+    return now < end ? (end - now) * 1000 : null;
+  }
   function deadlineText() {
+    const d = $("deadline"); d.classList.remove("urgent", "soon");
     if (!state) return "Laden…";
     if (revealOf(state.week)) return "Onthuld";
-    if (state.closed) return "Voorspellen gesloten voor deze week";
-    const wd = new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Amsterdam", weekday: "short" }).format(new Date());
-    return wd === "Fri" ? "Vandaag open tot 12:00" : "Open tot vrijdag 12:00";
+    const left = msToDeadline();
+    if (state.closed || left === null) return "Voorspellen gesloten voor deze week";
+    const s = Math.floor(left / 1000), h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
+    const n = guessesOf(state.week).length, who = n ? " · " + n + (n === 1 ? " collega heeft" : " collega's hebben") + " voorspeld" : "";
+    if (h >= 24) { const days = Math.floor(h / 24); return "Open tot vrijdag 12:00 · nog " + (days === 1 ? "1 dag" : days + " dagen") + who; }
+    const pad = (x) => String(x).padStart(2, "0");
+    d.classList.add(h < 1 ? "urgent" : "soon");
+    return "Nog " + h + ":" + pad(m) + ":" + pad(sec) + " tot 12:00" + who;
   }
 
   function render() {
@@ -148,6 +212,7 @@ const CROWN = '<svg class="crown" viewBox="0 0 24 18" aria-hidden="true"><path d
     $("adminOpen").hidden = !!adminCode;
     if (!state) return;
     fillPicker();
+    if (!render.walled) { render.walled = true; drawWall(initialWall(), false); }
 
     const wk = state.week, rev = revealOf(wk);
     $("wkLabel").textContent = "WK " + weekNo(wk);
@@ -167,7 +232,7 @@ const CROWN = '<svg class="crown" viewBox="0 0 24 18" aria-hidden="true"><path d
       $("meName").textContent = me.name;
       const mine = guessesOf(wk).find((g) => g.player_id === me.id);
       const locked = state.closed;
-      document.querySelectorAll(".door").forEach((d) => (d.disabled = locked));
+      lockDoors();
       $("guessInput").disabled = locked; $("guessBtn").disabled = locked; $("oracleBtn").disabled = locked; if (locked) $("oracleOut").hidden = true;
       $("guessBtn").textContent = mine ? "Voorspelling wijzigen" : "Voorspelling opslaan";
       $("myStatus").textContent = rev ? "Onthuld" : locked ? "Gesloten" : "Open";
@@ -373,5 +438,6 @@ const CROWN = '<svg class="crown" viewBox="0 0 24 18" aria-hidden="true"><path d
   render();
   refresh();
   setInterval(() => { if (!document.hidden) refresh(); }, 20000);
+  setInterval(() => { if (state && !document.hidden) { $("deadline").textContent = deadlineText(); if (!state.closed && msToDeadline() === null) refresh(); } }, 1000);
   document.addEventListener("visibilitychange", () => { if (!document.hidden) refresh(); });
 })();

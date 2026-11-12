@@ -113,13 +113,21 @@
     return '<svg viewBox="0 0 100 100" aria-hidden="true" class="ava-svg"><defs><clipPath id="c-' + k + '"><circle cx="50" cy="50" r="50"/></clipPath></defs><g clip-path="url(#c-' + k + ')"><rect width="100" height="100" fill="' + bg + '"/>' + body + "</g></svg>";
   }
 
+  // superheldenportretten (img/<voornaam>.jpg); onbekende namen krijgen een getekend poppetje
+  const PHOTOS = ["albrecht", "coen", "didi", "gerwin", "hannah", "jacco", "justin", "lars", "marit", "milan",
+    "nick", "niek", "nikos", "numan", "sam", "stefan", "stephan", "steven", "thijs"];
   const cache = {};
   window.avatar = function (name, cls) {
     const k = key(name);
     const span = document.createElement("span");
     span.className = "ava" + (cls ? " " + cls : "");
     span.title = name || "";
-    span.innerHTML = cache[k] || (cache[k] = svg(name));
+    if (PHOTOS.includes(k)) {
+      const img = document.createElement("img");
+      img.src = "img/" + k + ".jpg?v=1"; img.alt = ""; img.loading = "lazy"; img.decoding = "async";
+      img.onerror = () => { span.innerHTML = cache[k] || (cache[k] = svg(name)); };
+      span.append(img);
+    } else span.innerHTML = cache[k] || (cache[k] = svg(name));
     return span;
   };
 })();

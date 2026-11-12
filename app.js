@@ -236,11 +236,14 @@ const CROWN = '<svg class="crown" viewBox="0 0 24 18" aria-hidden="true"><path d
       $("kingLbl").textContent = (lastRev.correct.length > 1 ? "Snackkoningen" : "Snackkoning") + " van week " + weekNo(lastRev.week);
       $("kingName").textContent = k || "Niemand. De kroon blijft liggen.";
       $("kingSnack").textContent = "De snack was: " + lastRev.snack;
+      let ka = $("kingAva"); if (!ka) { ka = el("div", "kings-ava"); ka.id = "kingAva"; kb.insertBefore(ka, kb.querySelector("div")); }
+      ka.replaceChildren(...lastRev.correct.filter((u) => players()[u]).slice(0, 4).map((u) => avatar(players()[u], "lg")));
+      kb.querySelector(".crown").style.display = ka.children.length ? "none" : "";
     } else kb.hidden = true;
 
     // my guess
     if (loggedIn) {
-      $("meName").textContent = me.name;
+      $("meName").replaceChildren(avatar(me.name, "sm"), me.name);
       const mine = guessesOf(wk).find((g) => g.player_id === me.id);
       const locked = state.closed;
       lockDoors();
@@ -320,7 +323,7 @@ const CROWN = '<svg class="crown" viewBox="0 0 24 18" aria-hidden="true"><path d
     if (!wg.length) ul.append(el("li", "empty", "Nog geen voorspellingen. Wees de eerste."));
     wg.forEach((g) => {
       const li = el("li"); const isMe = me && g.player_id === me.id;
-      li.append(el("span", "dot" + (isMe ? " me" : ""), initials(players()[g.player_id] || "?")), el("span", "who", nameOf(g.player_id)),
+      li.append(avatar(players()[g.player_id] || "?", isMe ? "me" : ""), el("span", "who", nameOf(g.player_id)),
         el("span", "what", g.snack != null ? g.snack : "verborgen tot 12:00"));
       if (rev) {
         const ok = rev.correct.includes(g.player_id);
@@ -354,7 +357,8 @@ const CROWN = '<svg class="crown" viewBox="0 0 24 18" aria-hidden="true"><path d
         if (x.s !== prev) { rank = i + 1; prev = x.s; }
         const lead = rank === 1 && x.s > 0, tr = el("tr", lead ? "first" : "");
         const td = (v, c) => el("td", c || "", String(v));
-        tr.append(td(lead ? "1 ★" : rank, lead ? "medal" : ""), td(nameOf(x.u)), td(x.s, "n"), td(x.p, "n"),
+        const nm = el("td"), nc = el("span", "namecell"); nc.append(avatar(known[x.u], "sm"), nameOf(x.u)); nm.append(nc);
+        tr.append(td(lead ? "1 ★" : rank, lead ? "medal" : ""), nm, td(x.s, "n"), td(x.p, "n"),
           td(x.p ? Math.round((100 * x.s) / x.p) + "%" : "–", "n"));
         tb.append(tr);
       });
